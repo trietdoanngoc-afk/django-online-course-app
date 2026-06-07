@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ course.name }}</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-light bg-light">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">Online Course App</a>
+            </div>
+            <ul class="nav navbar-nav navbar-right">
+                {% if user.is_authenticated %}
+                <li>
+                    <span class="badge badge-muted">Logged in as: {{ user.username }}</span>
+                    <a class="btn btn-link" href="{% url 'onlinecourse:logout' %}">Logout</a>
+                </li>
+                {% else %}
+                <li>
+                    <form class="form-inline" action="{% url 'onlinecourse:login' %}" method="post">
+                        {% csrf_token %}
+                        <input type="text" class="form-control mr-sm-2" placeholder="Username" name="username">
+                        <input type="password" class="form-control mr-sm-2" placeholder="Password" name="password">
+                        <button class="btn btn-primary" type="submit">Login</button>
+                    </form>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2 class="text-primary mb-3">Course: {{ course.name }}</h2>
+        <p class="lead">{{ course.description }}</p>
+
+        <h3 class="mt-4">Lessons</h3>
+        <div class="card-deck">
+            {% for lesson in course.lesson_set.all %}
+            <div class="card shadow-sm mb-4" style="min-width: 18rem;">
+                <div class="card-body">
+                    <h5 class="card-title text-info">Lesson {{ lesson.order }}: {{ lesson.title }}</h5>
+                    <p class="card-text">{{ lesson.content }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if user.is_authenticated %}
+        <div class="card mt-5 border-warning shadow">
+            <div class="card-header bg-warning text-dark font-weight-bold">
+                <h4>Mock Exam for {{ course.name }}</h4>
+            </div>
+            <div class="card-body">
+                <form id="exam-form" action="{% url 'onlinecourse:submit' course.id %}" method="post">
+                    {% csrf_token %}
+                    
+                    {% for question in course.question_set.all %}
+                    <div class="card mb-3 border-light">
+                        <div class="card-body bg-light">
+                            <h5 class="card-title">Question {{ forloop.counter }}: {{ question.question_text }}</h5>
+                            
+                            {% for choice in question.choice_set.all %}
+                            <div class="form-check mb-2">
+                                <label class="form-check-label">
+                                    <input type="checkbox" name="choice_{{ question.id }}" class="form-check-input" value="{{ choice.id }}">
+                                    {{ choice.choice_text }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                            
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <button class="btn btn-success btn-lg btn-block mt-4" type="submit">Submit Exam</button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info mt-4" role="alert">
+            Please log in to take the mock exam for this course.
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
